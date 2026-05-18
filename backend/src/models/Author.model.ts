@@ -3,20 +3,21 @@ import mongoose, {Schema, Document} from "mongoose"
 // book is embedded inside Author 
 
 export interface IBook {
-    book_id: string; 
-    title: string; 
-    isbn: string; 
-    genre: string; 
-    ppublication_date: Date | null;
-    status: string; 
-    mrp: number | null; 
-    author_royalty_per_copy: number | null; 
-    total_royalty_earned: number ; 
-    royalty_paid: number ; 
-    royalty_pending: number; 
-    last_royalty_payout_date: Date | null; 
-    print_partner: string | null ; 
-    available_on: string[] ; 
+  book_id: string;
+  title: string;
+  isbn: string;
+  genre: string;
+  publication_date: Date | null;
+  status: string;
+  mrp: number | null;
+  author_royalty_per_copy: number | null;
+  total_copies_sold: number;        
+  total_royalty_earned: number;     
+  royalty_paid: number;            
+  royalty_pending: number;          
+  last_royalty_payout_date: Date | null;
+  print_partner: string | null;
+  available_on: string[];
 }
 
 export interface IAuthor extends Document {
