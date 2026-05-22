@@ -3,6 +3,7 @@ import { Ticket } from "../models/Ticket.model.js";
 import { Author } from "../models/Author.model.js";
 import { generateTicketNumber } from "../utils/ticketNumber.js";
 import { classifyTicket } from "../services/ai.service.js";
+import { getIO } from "../config/socket.js";
 
 // author creating a new support ticket
 
@@ -13,7 +14,7 @@ export const createTicket = async (
   try {
     const { book_id, subject, description } = req.body;
 
-    console.log('Received body:', { book_id, subject, description });
+    console.log("Received body:", { book_id, subject, description });
 
     // validating the required fields
 
@@ -107,21 +108,33 @@ export const createTicket = async (
       data: { ticket },
     });
 
+    // notifying all connected admins that a new ticket arrived
+
+    getIO().to("admin").emit("ticket:created", {
+      ticketId: ticket._id,
+      ticket_number: ticket.ticket_number,
+      author_name: ticket.author_name,
+      subject: ticket.subject,
+      message: "New support ticket received",
+    });
+
     // runs after response is sent - author does not wait for this, if classification fails, ticket stays as Pending/Medium - admin can override manually
 
     classifyTicket(subject, description)
       .then(async (result) => {
         await Ticket.findByIdAndUpdate(ticket._id, {
-          ai_category: result.category, 
-          ai_priority: result.priority, 
-          ai_confidence: result.confidence
-        }) ; 
+          ai_category: result.category,
+          ai_priority: result.priority,
+          ai_confidence: result.confidence,
+        });
 
-        console.log(`Ticket ${ticket.ticket_number} classified as: ${result.category} / ${result.priority}`) ; 
+        console.log(
+          `Ticket ${ticket.ticket_number} classified as: ${result.category} / ${result.priority}`,
+        );
       })
       .catch((err) => {
-        console.error('Background classification error: ', err)
-      })
+        console.error("Background classification error: ", err);
+      });
   } catch (error) {
     console.error("createTicket error: ", error);
     res.status(500).json({
@@ -177,7 +190,10 @@ export const getMyTickets = async (
 
 // return a single ticket - only if it belongs to the author (GET)
 
-export const getTicketById = async (req: Request, res: Response): Promise<void> => {
+export const getTicketById = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const author = await Author.findOne({
       author_id: req.user?.author_id,
@@ -186,8 +202,8 @@ export const getTicketById = async (req: Request, res: Response): Promise<void> 
     if (!author) {
       res.status(404).json({
         success: false,
-        error: 'AUTHOR_NOT_FOUND',
-        message: 'Author profile not found',
+        error: "AUTHOR_NOT_FOUND",
+        message: "Author profile not found",
       });
       return;
     }
@@ -195,13 +211,13 @@ export const getTicketById = async (req: Request, res: Response): Promise<void> 
     const ticket = await Ticket.findOne({
       _id: req.params.id,
       author_id: author._id, // ensures author can only see own tickets
-    }).select('-internal_notes'); // never expose internal notes to author
+    }).select("-internal_notes"); // never expose internal notes to author
 
     if (!ticket) {
       res.status(404).json({
         success: false,
-        error: 'TICKET_NOT_FOUND',
-        message: 'Ticket not found',
+        error: "TICKET_NOT_FOUND",
+        message: "Ticket not found",
       });
       return;
     }
@@ -211,11 +227,11 @@ export const getTicketById = async (req: Request, res: Response): Promise<void> 
       data: { ticket },
     });
   } catch (error) {
-    console.error('getTicketById error:', error);
+    console.error("getTicketById error:", error);
     res.status(500).json({
       success: false,
-      error: 'SERVER_ERROR',
-      message: 'Something went wrong',
+      error: "SERVER_ERROR",
+      message: "Something went wrong",
     });
   }
 };

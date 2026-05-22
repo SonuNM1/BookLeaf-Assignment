@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { Ticket } from "../models/Ticket.model.js";
 import { Author } from "../models/Author.model.js";
 import { generateDraftResponse } from "../services/ai.service.js";
+import { getIO } from "../config/socket.js";
 
 // returns all tickets across all authors with filtering support
 
@@ -79,40 +80,42 @@ export const getTicketByIdAdmin = async (
 
     const author = await Author.findById(ticket.author_id);
 
-    // building book context only if ticket is about a specific book - avoiding sending irrelevant data to AI for cost awareness 
+    // building book context only if ticket is about a specific book - avoiding sending irrelevant data to AI for cost awareness
 
-    let bookContext = null ;
+    let bookContext = null;
 
-    if(ticket.book_id && author) {
-      const book = author.books.find((b) => b.book_id === ticket.book_id) ; 
+    if (ticket.book_id && author) {
+      const book = author.books.find((b) => b.book_id === ticket.book_id);
 
-      if(book) {
+      if (book) {
         bookContext = {
-          title: book.title, 
-          status: book.status, 
-          royalty_pending: book.royalty_pending, 
-          royalty_paid: book.royalty_paid, 
-          total_copies_sold: book.total_copies_sold, 
-          last_royalty_payout_date: book.last_royalty_payout_date ? book.last_royalty_payout_date.toISOString() : null 
-        }
+          title: book.title,
+          status: book.status,
+          royalty_pending: book.royalty_pending,
+          royalty_paid: book.royalty_paid,
+          total_copies_sold: book.total_copies_sold,
+          last_royalty_payout_date: book.last_royalty_payout_date
+            ? book.last_royalty_payout_date.toISOString()
+            : null,
+        };
       }
     }
 
-    // generating draft - returning null if AI fails 
+    // generating draft - returning null if AI fails
 
     const aiDraft = await generateDraftResponse(
-      ticket.author_name, 
-      ticket.subject, 
-      ticket.description, 
-      bookContext
-    )
+      ticket.author_name,
+      ticket.subject,
+      ticket.description,
+      bookContext,
+    );
 
     res.status(200).json({
       success: true,
       data: {
         ticket,
         author,
-        ai_draft: aiDraft, // null means AI unavailable - frontend handles this gracefully 
+        ai_draft: aiDraft, // null means AI unavailable - frontend handles this gracefully
       },
     });
   } catch (error) {
@@ -183,7 +186,16 @@ export const respondToTicket = async (
       data: { ticket: updatedTicket },
     });
 
-    // TODO: emit socket event here so author sees response in real time. We will add this in the Socket.IO step
+    const author = await Author.findById(updatedTicket?.author_id);
+
+    if (author) {
+      console.log(`Emitting to room: author:${author.author_id}`);
+      getIO().to(`author:${author.author_id}`).emit("ticket:updated", {
+        ticketId: updatedTicket?._id,
+        ticket: updatedTicket,
+        message: "You have a new response on your ticket",
+      });
+    }
   } catch (error) {
     console.error("respondToTicket error: ", error);
 
