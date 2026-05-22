@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { Ticket } from "../models/Ticket.model.js";
 import { Author } from "../models/Author.model.js";
 import { generateTicketNumber } from "../utils/ticketNumber.js";
+import { classifyTicket } from "../services/ai.service.js";
 
 // author creating a new support ticket
 
@@ -106,7 +107,21 @@ export const createTicket = async (
       data: { ticket },
     });
 
-    // trigger AI classification here after response is sent - we will add this ini the AI integration setup
+    // runs after response is sent - author does not wait for this, if classification fails, ticket stays as Pending/Medium - admin can override manually
+
+    classifyTicket(subject, description)
+      .then(async (result) => {
+        await Ticket.findByIdAndUpdate(ticket._id, {
+          ai_category: result.category, 
+          ai_priority: result.priority, 
+          ai_confidence: result.confidence
+        }) ; 
+
+        console.log(`Ticket ${ticket.ticket_number} classified as: ${result.category} / ${result.priority}`) ; 
+      })
+      .catch((err) => {
+        console.error('Background classification error: ', err)
+      })
   } catch (error) {
     console.error("createTicket error: ", error);
     res.status(500).json({
