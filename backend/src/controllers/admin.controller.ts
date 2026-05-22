@@ -250,7 +250,7 @@ export const addInternalNote = async (
       {
         $push: {
           internal_notes: {
-            admin_notes: "BookLeaf Support",
+            admin_name: "BookLeaf Support",
             content: content.trim(),
             created_at: new Date(),
           },
@@ -320,7 +320,7 @@ export const overrideClassification = async (
 
       // flag that human overrode the AI decision
 
-      updates.category_overriden = true;
+      updates.category_overridden = true;
     }
 
     if (ai_priority) {
@@ -333,7 +333,7 @@ export const overrideClassification = async (
         return;
       }
       updates.ai_priority = ai_priority;
-      updates.priority_overriden = true;
+      updates.priority_overridden = true;
     }
 
     const ticket = await Ticket.findByIdAndUpdate(req.params.id, updates, {

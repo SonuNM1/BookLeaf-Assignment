@@ -4,6 +4,8 @@ import { protect, restrictTo } from "../middleware/auth.middleware.js";
 
 const router = Router() ; 
 
+router.use(protect, restrictTo('admin')) ; 
+
 // every admin route requires login AND admin role 
 
 router.get('/tickets', getAllTickets);
