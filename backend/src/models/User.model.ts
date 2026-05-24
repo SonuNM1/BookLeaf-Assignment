@@ -1,7 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import type { UserRole } from '../types/index.js';
-import type { CallbackWithoutResultAndOptionalError } from 'mongoose';
 
 export interface IUser extends Document {
   email: string;
@@ -39,20 +38,6 @@ const UserSchema = new Schema<IUser>(
   },
   { timestamps: { createdAt: 'created_at', updatedAt: false } }
 );
-
-// explicitly type next as CallbackWithoutResultAndOptionalError
-// fixes the SaveOptions type conflict in newer Mongoose versions
-UserSchema.pre('save', async function (
-  this: IUser,
-  next: CallbackWithoutResultAndOptionalError
-) {
-  if (!this.isModified('password')) {
-    next();
-    return;
-  }
-  this.password = await bcrypt.hash(this.password, 12);
-  next();
-});
 
 UserSchema.methods.comparePassword = async function (
   candidate: string
