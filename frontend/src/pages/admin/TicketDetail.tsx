@@ -40,16 +40,13 @@ const AdminTicketDetail = () => {
   const [aiDraft, setAiDraft] = useState<string>('')
   const [isLoading, setIsLoading] = useState(true)
 
-  // response panel state
   const [response, setResponse] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [isAiDrafted, setIsAiDrafted] = useState(false)
 
-  // internal note state
   const [note, setNote] = useState('')
   const [isAddingNote, setIsAddingNote] = useState(false)
 
-  // override state
   const [isOverriding, setIsOverriding] = useState(false)
   const [overrideCategory, setOverrideCategory] = useState('')
   const [overridePriority, setOverridePriority] = useState('')
@@ -57,7 +54,6 @@ const AdminTicketDetail = () => {
   useEffect(() => {
     const fetchTicket = async () => {
       try {
-        // this call also generates the AI draft
         const res = await api.get(`/admin/tickets/${id}`)
         const { ticket: ticketData, author: authorData, ai_draft } = res.data.data
 
@@ -67,7 +63,6 @@ const AdminTicketDetail = () => {
         setOverridePriority(ticketData.ai_priority)
 
         if (ai_draft) {
-          // pre-fill response textarea with AI draft
           setAiDraft(ai_draft)
           setResponse(ai_draft)
           setIsAiDrafted(true)
@@ -86,7 +81,6 @@ const AdminTicketDetail = () => {
       toast.error('Response cannot be empty')
       return
     }
-
     setIsSending(true)
     try {
       const res = await api.post(`/admin/tickets/${id}/respond`, {
@@ -109,13 +103,11 @@ const AdminTicketDetail = () => {
       toast.error('Note cannot be empty')
       return
     }
-
     setIsAddingNote(true)
     try {
       await api.post(`/admin/tickets/${id}/notes`, {
         content: note.trim(),
       })
-      // refetch to get updated notes
       const res = await api.get(`/admin/tickets/${id}`)
       setTicket(res.data.data.ticket)
       setNote('')
@@ -161,33 +153,30 @@ const AdminTicketDetail = () => {
       hour: '2-digit', minute: '2-digit',
     })
 
+  // fixed — no Navbar reference
   if (isLoading) return (
-    <div className="min-h-screen bg-slate-50">
-      <Navbar />
+    <Layout>
       <div className="text-center py-20">
         <p className="text-sm text-slate-400">Loading ticket...</p>
       </div>
-    </div>
+    </Layout>
   )
 
   if (!ticket) return (
-    <div className="min-h-screen bg-slate-50">
-      <Navbar />
+    <Layout>
       <div className="text-center py-20">
         <p className="text-sm text-slate-400 mb-3">Ticket not found</p>
         <Link to="/admin/tickets" className="text-sm text-blue-700">
           ← Back to queue
         </Link>
       </div>
-    </div>
+    </Layout>
   )
 
   return (
     <Layout>
-
       <div className="max-w-6xl mx-auto px-6 py-9">
 
-        {/* back */}
         <Link
           to="/admin/tickets"
           className="text-sm text-slate-400 hover:text-slate-600 transition-colors mb-5 inline-block"
@@ -197,7 +186,7 @@ const AdminTicketDetail = () => {
 
         <div className="grid grid-cols-3 gap-5">
 
-          {/* LEFT COLUMN — main ticket content */}
+          {/* LEFT COLUMN */}
           <div className="col-span-2 flex flex-col gap-4">
 
             {/* ticket header */}
@@ -215,7 +204,6 @@ const AdminTicketDetail = () => {
                     {ticket.subject}
                   </h1>
                 </div>
-                {/* status dropdown */}
                 <select
                   value={ticket.status}
                   onChange={(e) => handleStatusChange(e.target.value)}
@@ -296,7 +284,6 @@ const AdminTicketDetail = () => {
                 )}
               </div>
 
-              {/* AI draft preview */}
               {aiDraft && (
                 <div className="mb-3 p-3 bg-indigo-50 border border-indigo-100 rounded-lg">
                   <p className="text-xs font-medium text-indigo-700 mb-1">
@@ -312,7 +299,6 @@ const AdminTicketDetail = () => {
                 value={response}
                 onChange={(e) => {
                   setResponse(e.target.value)
-                  // if admin edits the draft, mark as not purely AI drafted
                   if (isAiDrafted && e.target.value !== aiDraft) {
                     setIsAiDrafted(false)
                   }
@@ -324,14 +310,12 @@ const AdminTicketDetail = () => {
 
               <div className="flex items-center justify-between">
                 <p className="text-xs text-slate-400">
-                  {isAiDrafted
-                    ? '✦ Using AI draft — edit freely'
-                    : 'Writing manually'}
+                  {isAiDrafted ? '✦ Using AI draft — edit freely' : 'Writing manually'}
                 </p>
                 <button
                   onClick={handleRespond}
                   disabled={isSending || !response.trim()}
-                  className="text-sm bg-blue-800 text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:cursor-pointer"
+                  className="text-sm bg-blue-800 text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                 >
                   {isSending ? 'Sending...' : 'Send Response'}
                 </button>
@@ -345,7 +329,6 @@ const AdminTicketDetail = () => {
                 <span className="ml-2 text-slate-300 normal-case">(not visible to author)</span>
               </p>
 
-              {/* existing notes */}
               {ticket.internal_notes && ticket.internal_notes.length > 0 && (
                 <div className="flex flex-col gap-2 mb-4">
                   {ticket.internal_notes.map((n) => (
@@ -354,22 +337,15 @@ const AdminTicketDetail = () => {
                       className="p-3 bg-amber-50 border border-amber-100 rounded-lg"
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <p className="text-xs font-medium text-amber-700">
-                          {n.admin_name}
-                        </p>
-                        <p className="text-xs text-amber-500">
-                          {formatTime(n.created_at)}
-                        </p>
+                        <p className="text-xs font-medium text-amber-700">{n.admin_name}</p>
+                        <p className="text-xs text-amber-500">{formatTime(n.created_at)}</p>
                       </div>
-                      <p className="text-sm text-amber-900 leading-relaxed">
-                        {n.content}
-                      </p>
+                      <p className="text-sm text-amber-900 leading-relaxed">{n.content}</p>
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* add note */}
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
@@ -380,7 +356,7 @@ const AdminTicketDetail = () => {
               <button
                 onClick={handleAddNote}
                 disabled={isAddingNote || !note.trim()}
-                className="text-sm bg-amber-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:cursor-pointer"
+                className="text-sm bg-amber-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
               >
                 {isAddingNote ? 'Adding...' : 'Add Note'}
               </button>
@@ -388,7 +364,7 @@ const AdminTicketDetail = () => {
 
           </div>
 
-          {/* RIGHT COLUMN — author info + classification */}
+          {/* RIGHT COLUMN */}
           <div className="col-span-1 flex flex-col gap-4">
 
             {/* author info */}
@@ -400,12 +376,10 @@ const AdminTicketDetail = () => {
                 <div className="flex flex-col gap-2">
                   <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mb-1">
                     <span className="text-sm font-medium text-blue-700">
-                      {author.name.split(' ').map(n => n[0]).join('')}
+                      {author.name.split(' ').map((n: string) => n[0]).join('')}
                     </span>
                   </div>
-                  <p className="text-sm font-medium text-slate-800">
-                    {author.name}
-                  </p>
+                  <p className="text-sm font-medium text-slate-800">{author.name}</p>
                   <p className="text-xs text-slate-400">{author.email}</p>
                   <p className="text-xs text-slate-400">{author.city}</p>
                   <div className="pt-2 border-t border-slate-100 mt-1">
@@ -420,14 +394,14 @@ const AdminTicketDetail = () => {
               )}
             </div>
 
-            {/* book info if ticket is book-specific */}
+            {/* book context */}
             {ticket.book_id && author && (
               <div className="bg-white rounded-xl border border-slate-200 p-5">
                 <p className="text-xs uppercase tracking-widest text-slate-400 mb-4">
                   Book Context
                 </p>
                 {(() => {
-                  const book = author.books.find(b => b.book_id === ticket.book_id)
+                  const book = author.books.find((b) => b.book_id === ticket.book_id)
                   if (!book) return null
                   return (
                     <div className="flex flex-col gap-2">
@@ -461,12 +435,11 @@ const AdminTicketDetail = () => {
               </div>
             )}
 
-            {/* AI classification override */}
+            {/* classification override */}
             <div className="bg-white rounded-xl border border-slate-200 p-5">
               <p className="text-xs uppercase tracking-widest text-slate-400 mb-4">
                 Classification
               </p>
-
               <div className="flex flex-col gap-3">
                 <div>
                   <label className="block text-xs text-slate-500 mb-1.5">
@@ -507,7 +480,7 @@ const AdminTicketDetail = () => {
                 <button
                   onClick={handleOverride}
                   disabled={isOverriding}
-                  className="text-xs bg-slate-800 text-white px-3 py-2 rounded-lg hover:bg-slate-900 disabled:opacity-50 transition-colors hover:cursor-pointer"
+                  className="text-xs bg-slate-800 text-white px-3 py-2 rounded-lg hover:bg-slate-900 disabled:opacity-50 transition-colors cursor-pointer"
                 >
                   {isOverriding ? 'Saving...' : 'Save Classification'}
                 </button>
@@ -528,7 +501,7 @@ const AdminTicketDetail = () => {
           </div>
         </div>
       </div>
-      </Layout>
+    </Layout>
   )
 }
 
