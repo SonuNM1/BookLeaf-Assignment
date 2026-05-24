@@ -1,1 +1,33 @@
-@import "tailwindcss"
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --bg-base: #F8FAFC;
+  --bg-card: #FFFFFF;
+
+  --primary: #1E40AF;
+  --primary-hover: #1D3FA0;
+  --primary-light: #DBEAFE;
+  --primary-mid: #3B82F6;
+
+  --amber: #B45309;
+  --amber-light: #FEF3C7;
+
+  --ink-dark: #1E3A5F;
+  --ink-mid: #475569;
+  --ink-light: #94A3B8;
+
+  --border: #BFDBFE;
+  --border-subtle: #E2E8F0;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--ink-dark);
+  font-family: 'Inter', sans-serif;
+}
+
+h1, h2, h3 {
+  font-family: 'Lora', serif;
+}

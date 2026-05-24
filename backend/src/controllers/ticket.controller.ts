@@ -127,13 +127,20 @@ export const createTicket = async (
           ai_priority: result.priority,
           ai_confidence: result.confidence,
         });
-
         console.log(
           `Ticket ${ticket.ticket_number} classified as: ${result.category} / ${result.priority}`,
         );
+        
+        const { getIO } = await import("../config/socket.js");
+        getIO().to("admin").emit("ticket:classified", {
+          ticketId: ticket._id,
+          ai_category: result.category,
+          ai_priority: result.priority,
+          ai_confidence: result.confidence,
+        });
       })
       .catch((err) => {
-        console.error("Background classification error: ", err);
+        console.error("Background classification error:", err);
       });
   } catch (error) {
     console.error("createTicket error: ", error);
