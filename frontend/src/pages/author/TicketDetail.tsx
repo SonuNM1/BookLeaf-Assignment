@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { toast } from 'sonner'
-import Navbar from '../../components/shared/Navbar.js'
 import api from '../../services/api.js'
 import { getSocket } from '../../socket/index.js'
 import type { Ticket } from '../../types/index.js'
@@ -33,7 +32,6 @@ const TicketDetail = () => {
     fetchTicket()
   }, [id])
 
-  // real-time update for this specific ticket
   useEffect(() => {
     const socket = getSocket()
 
@@ -55,32 +53,28 @@ const TicketDetail = () => {
     })
 
   if (isLoading) return (
-    <div className="min-h-screen bg-slate-50">
-      <Navbar />
+    <Layout>
       <div className="text-center py-20">
         <p className="text-sm text-slate-400">Loading ticket...</p>
       </div>
-    </div>
+    </Layout>
   )
 
   if (!ticket) return (
-    <div className="min-h-screen bg-slate-50">
-      <Navbar />
+    <Layout>
       <div className="text-center py-20">
         <p className="text-sm text-slate-400 mb-3">Ticket not found</p>
         <Link to="/author/tickets" className="text-sm text-blue-700">
           ← Back to tickets
         </Link>
       </div>
-    </div>
+    </Layout>
   )
 
   return (
     <Layout>
-
       <div className="max-w-3xl mx-auto px-6 py-9">
 
-        {/* back */}
         <Link
           to="/author/tickets"
           className="text-sm text-slate-400 hover:text-slate-600 transition-colors mb-5 inline-block"
@@ -162,6 +156,7 @@ const TicketDetail = () => {
 
         </div>
       </div>
+    </Layout>
   )
 }
 
