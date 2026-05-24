@@ -2,7 +2,7 @@
 
 A full-stack web application for BookLeaf Publishing that enables authors to manage support tickets and helps the operations team handle queries faster using AI-assisted response generation.
 
-**Live Demo:** https://your-deployed-url.com  
+**Live Demo:** https://bookleaf-pearl.vercel.app
 **Admin login:** admin@bookleaf.com / admin123  
 **Author login:** priya.sharma@email.com / password123
 
