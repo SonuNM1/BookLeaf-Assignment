@@ -8,20 +8,17 @@ export interface TokenPayload {
 
 export const generateToken = (payload: TokenPayload): string => {
   const secret = process.env.JWT_SECRET;
-
   if (!secret) throw new Error('JWT_SECRET is not defined');
 
-  // payload is the parameter passed into this function
-  // make sure the word "payload" matches exactly here
+  // cast expiresIn to any to avoid strict type conflict
+  // between jsonwebtoken versions
   return jwt.sign(payload, secret, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any,
   });
 };
 
 export const verifyToken = (token: string): TokenPayload => {
   const secret = process.env.JWT_SECRET;
-
   if (!secret) throw new Error('JWT_SECRET is not defined');
-
   return jwt.verify(token, secret) as TokenPayload;
 };
